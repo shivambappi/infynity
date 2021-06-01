@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>1.3.7.RELEASE</version>
+		<relativePath /> <!-- lookup parent from repository -->
+	</parent>
+
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>integration-testing-spring-boot-postgres-docker</artifactId>
+	<groupId>com.asimio.test</groupId>
+	<version>0-SNAPSHOT</version>
+	<packaging>jar</packaging>
+	<name>Integration Testing + Spring Boot + Postgres + Docker Example</name>
+	<description>Integration Testing + Spring Boot + Postgres + Docker Example</description>
+
+	<scm>
+		<connection>${repo.bitbucket.url}</connection>
+		<developerConnection>${repo.bitbucket.url}</developerConnection>
+		<url>${project.bitbucket.url}</url>
+	</scm>
+
+	<organization>
+		<name>Asimio Tech LLC</name>
+		<url>http://tech.asimio.net/</url>
+	</organization>
+	<inceptionYear>2016</inceptionYear>
+	<ciManagement>
+		<system>jenkins</system>
+		<url>http://jenkins.3velopers.net:8080/jenkins/</url>
+	</ciManagement>
+
+	<developers>
+		<developer>
+			<id>ootero</id>
+			<name>Orlando L Otero</name>
+			<organization>Asimio Tech LLC</organization>
+		</developer>
+	</developers>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<java.version>1.8</java.version>
+		<start-class>com.asimio.dvdrentals.SpringbootITApplication</start-class>
+		<packaging.type>jar</packaging.type>
+		<push.image>false</push.image>
+
+		<project.bitbucket.url>https://bitbucket.org/asimio</project.bitbucket.url>
+		<repo.bitbucket.url>${project.bitbucket.url}/springboot-integration-tests-docker.git</repo.bitbucket.url>
+
+		<!-- Plugins -->
+		<maven-clean-plugin.version>2.5</maven-clean-plugin.version>
+		<maven-compiler-plugin.version>3.3</maven-compiler-plugin.version>
+		<maven-failsafe-plugin.version>2.19.1</maven-failsafe-plugin.version>
+
+		<!-- Dependencies -->
+		<postgresql.version>9.4-1206-jdbc42</postgresql.version>
+
+		<!-- Test Dependencies -->
+		<docker-client.version>5.0.2</docker-client.version>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-log4j</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>${postgresql.version}</version>
+		</dependency>
+
+		<!-- Test dependencies -->
+		<dependency>
+		    <groupId>com.spotify</groupId>
+		    <artifactId>docker-client</artifactId>
+		    <version>${docker-client.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>commons-collections</groupId>
+			<artifactId>commons-collections</artifactId>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<finalName>${project.artifactId}</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${maven-compiler-plugin.version}</version>
+				<configuration>
+					<compilerArguments>
+						<source>${java.version}</source>
+						<target>${java.version}</target>
+					</compilerArguments>
+				</configuration>
+			</plugin>
+			<!--
+				Generate JPA entities from command line executing:
+				Remove protocol and port from DOCKER_HOST
+				mvn hibernate3:hbm2java -Ddocker.host=`echo $DOCKER_HOST | sed "s/^tcp:\/\///" | sed "s/:.*$//"` or
+				mvn hibernate3:hbm2java -Ddocker.host=`boot2docker ip`
+				and start DB docker container as:
+				docker run -d -p 5432:5432 -e DB_NAME=db_dvdrental -e DB_USER=user_dvdrental -e DB_PASSWD=changeit asimio/db_dvdrental:latest
+			-->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>hibernate3-maven-plugin</artifactId>
+				<version>2.2</version>
+				<configuration>
+					<components>
+						<component>
+							<name>hbm2java</name>
+							<implementation>jdbcconfiguration</implementation>
+							<outputDirectory>target/generated-sources/hibernate3</outputDirectory>
+						</component>
+					</components>
+					<componentProperties>
+						<revengfile>src/main/resources/reveng/db_dvdrental.reveng.xml</revengfile>
+						<propertyfile>src/main/resources/reveng/db_dvdrental.hibernate.properties</propertyfile>
+						<packagename>com.asimio.dvdrentals.model</packagename>
+						<jdk5>true</jdk5>
+						<ejb3>true</ejb3>
+					</componentProperties>
+				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>cglib</groupId>
+						<artifactId>cglib-nodep</artifactId>
+						<version>2.2.2</version>
+					</dependency>
+					<dependency>
+						<groupId>org.postgresql</groupId>
+						<artifactId>postgresql</artifactId>
+						<version>${postgresql.version}</version>
+					</dependency>	           
+				</dependencies>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<version>${maven-failsafe-plugin.version}</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+					</execution>
+				</executions> 
+			</plugin>
+		</plugins>
+	</build>
+
+	<repositories>
+		<repository>
+			<id>spring-milestone</id>
+			<name>Spring Milestone Repository</name>
+			<url>https://repo.spring.io/milestone</url>
+		</repository>
+	</repositories>
+
+</project>

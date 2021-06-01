@@ -1,0 +1,13 @@
+
+---
+spring:
+  profiles: test
+  database:
+    driverClassName: org.postgresql.Driver
+  datasource:
+    url: jdbc:postgresql://${docker.host}:${HOST_PORT_FOR_5432}/db_dvdrental
+    username: user_dvdrental
+    password: changeit
+  jpa:
+    database: POSTGRESQL
+    generate-ddl: false

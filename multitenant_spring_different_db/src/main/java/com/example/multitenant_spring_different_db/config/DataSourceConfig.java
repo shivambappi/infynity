@@ -25,6 +25,8 @@ public class DataSourceConfig implements Serializable {
 	private String username;
 	private String password;
 	private String driverClassName;
+	
+	
 	private boolean initialize;
 
 	public Long getId() {
@@ -86,5 +88,9 @@ public class DataSourceConfig implements Serializable {
 	public static long getSerialversionuid() {
 		return serialVersionUID;
 	}
+
+	
+	
+	
 
 }

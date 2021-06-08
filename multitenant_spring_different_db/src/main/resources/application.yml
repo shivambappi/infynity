@@ -12,4 +12,6 @@ spring:
     properties:
       hibernate:
         hbm2ddl:
-          auto: none      
+          auto: none
+        default_schema: vaccine
+              
